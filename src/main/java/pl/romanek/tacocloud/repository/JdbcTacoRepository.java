@@ -9,12 +9,15 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 import pl.romanek.tacocloud.domain.Ingredient;
 import pl.romanek.tacocloud.domain.Taco;
 
+@Repository
 public class JdbcTacoRepository implements TacoRepository{
 
     private JdbcTemplate jdbc;
+
 
     public JdbcTacoRepository(JdbcTemplate jdbc) {  //wstrzkuję przez konstruktor JdbcTemplate
         this.jdbc = jdbc;
@@ -23,7 +26,7 @@ public class JdbcTacoRepository implements TacoRepository{
    
     
     @Override
-       public Taco save(Taco taco) {
+       public Taco save(Taco taco) { //odwoluje sie do tej metody w kotrolerze jak taco jest dodane
 
         long tacoId = saveTacoInfo(taco);  //za pomocą metody zwracam wartość Taco id 
         
@@ -47,10 +50,10 @@ public class JdbcTacoRepository implements TacoRepository{
         
         taco.setCreatedAt(new Date());
 
-        PreparedStatementCreator psc = new PreparedStatementCreatorFactory("insert into Taco (name, createdAt) values (?, ?)",Types.VARCHAR, Types.TIMESTAMP)
-                .newPreparedStatementCreator(Arrays.asList(taco.getName(),new Timestamp(taco.getCreatedAt().getTime())));
-
-        
+        PreparedStatementCreatorFactory pscf = new PreparedStatementCreatorFactory("insert into Taco (name, createdAt) values (?, ?)", Types.VARCHAR, Types.TIMESTAMP);
+        pscf.setReturnGeneratedKeys(true);
+        PreparedStatementCreator psc = pscf.newPreparedStatementCreator(Arrays.asList(taco.getName(), new Timestamp(taco.getCreatedAt().getTime())));
+             
         KeyHolder keyHolder = new GeneratedKeyHolder();//generuje id Taco
         
         jdbc.update(psc,keyHolder);//inna metoda wstawiania rekordu
